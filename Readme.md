@@ -1,7 +1,7 @@
 # Личный проект «Кекстаграм» [![Build status][travis-image]][travis-url]
 
 * Студент: [Илья Барашков](https://up.htmlacademy.ru/javascript/10/user/379063).
-* Наставник: `Неизвестно`.
+* Наставник: `Антон Попов`.
 
 ---
 
