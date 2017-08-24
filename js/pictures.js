@@ -2,7 +2,7 @@
 'use strict';
 
 var generatePhotos = function (quantity) {
-  var COMMENTS = ['Всё отлично!', 'В целом не плохо. Но не всё.',
+  var comments = ['Всё отлично!', 'В целом не плохо. Но не всё.',
     'Когда вы делаете фотографию, хорошо бы убрать палец из кадра. В конце концов это просто непрофессионально',
     'Моя бабушка случайно чихнула с фотоаппаратом в руках и у неё получилась фотография лучше.',
     'Я поскользнулся на банановой кожуре и уронил фотоаппарат на кота и у меня получилась фотография лучше',
@@ -20,9 +20,9 @@ var generatePhotos = function (quantity) {
       likes: getRandomInt(15, 201)
     };
     if (getRandomInt(0, 2) > 0) {
-      photo.comments = [COMMENTS[getRandomInt(0, COMMENTS.length)], COMMENTS[getRandomInt(0, COMMENTS.length)]];
+      photo.comments = [comments[getRandomInt(0, comments.length)], comments[getRandomInt(0, comments.length)]];
     } else {
-      photo.comments = [COMMENTS[getRandomInt(0, COMMENTS.length)]];
+      photo.comments = [comments[getRandomInt(0, comments.length)]];
     }
     photos.push(photo);
   }
