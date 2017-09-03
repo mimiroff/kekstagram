@@ -5,6 +5,13 @@
 'use strict';
 
 (function () {
+
+  var errorPrint = function (error) {
+    var errorMessage = document.createElement('DIV');
+    errorMessage.textContent = error;
+    errorMessage.classList.add('upload-message upload-message-error');
+  };
+
   /**
    * Функция создания массива объектов (фотографий) со случайно сгенерированным количеством лайков,
    * комментариями, случайно взятыми из подготовленного массива и адресом картинки в локальной папке
@@ -61,8 +68,9 @@
       fragment.appendChild(generateElements(photos[i]));
     }
     pictures.appendChild(fragment);
+    window.popup.getElementData(pictures.querySelectorAll('.picture'));
   };
+  window.backend.load(showPhotoElements, errorPrint);
 
-  showPhotoElements(generatePhotos(25));
 })();
 
