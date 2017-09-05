@@ -5,20 +5,13 @@
 'use strict';
 
 (function () {
-
-  var errorPrint = function (error) {
-    var errorMessage = document.createElement('DIV');
-    errorMessage.textContent = error;
-    errorMessage.classList.add('upload-message upload-message-error');
-  };
-
   /**
    * Функция создания массива объектов (фотографий) со случайно сгенерированным количеством лайков,
    * комментариями, случайно взятыми из подготовленного массива и адресом картинки в локальной папке
    * @param {Number} quantity
    * @return {Array}
    */
-  var generatePhotos = function (quantity) {
+  /* var generatePhotos = function (quantity) {
     var comments = ['Всё отлично!', 'В целом не плохо. Но не всё.',
       'Когда вы делаете фотографию, хорошо бы убрать палец из кадра. В конце концов это просто непрофессионально',
       'Моя бабушка случайно чихнула с фотоаппаратом в руках и у неё получилась фотография лучше.',
@@ -41,7 +34,7 @@
     }
 
     return photos;
-  };
+  };*/
   /**
    * Функция создания DOM элемента на основе шаблона, с комтентом, составленным из данных, содержащихся в
    * объекте, создаваемым функцией generatePhotos
@@ -70,7 +63,6 @@
     pictures.appendChild(fragment);
     window.popup.getElementData(pictures.querySelectorAll('.picture'));
   };
-  window.backend.load(showPhotoElements, errorPrint);
-
+  window.backend.load(showPhotoElements, window.util.renderError);
 })();
 

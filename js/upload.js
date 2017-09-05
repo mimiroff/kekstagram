@@ -99,8 +99,14 @@
     } else if (mismatchCount > 0) {
       errorHighlight(hashTagForm);
     } else {
-      form.submit();
+      window.backend.save(new FormData(form), onSaveSuccess, window.util.renderError);
     }
+  };
+
+  var onSaveSuccess = function () {
+    framingForm.classList.add('hidden');
+    uploadForm.classList.remove('hidden');
+    form.reset();
   };
 
   /**
@@ -230,5 +236,4 @@
    * Регистрация обрабочика события на поле input (загрузка файла)
    */
   uploadInput.addEventListener('change', onUploadInputChange);
-
 })();

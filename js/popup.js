@@ -33,8 +33,6 @@
     var likes = evt.currentTarget.querySelector('.picture-likes').textContent;
     var comments = evt.currentTarget.querySelector('.picture-comments').textContent;
 
-    console.log(image);
-
     gallery.querySelector('.gallery-overlay-image').src = image;
     gallery.querySelector('.likes-count').textContent = likes;
     gallery.querySelector('.comments-count').textContent = comments;
@@ -82,12 +80,11 @@
   galleryClose.addEventListener('keydown', onGalleryCloseEnterPress);
 
   /**
-   * подвешивание обработчиков событий на каждую картинку с помощью цикла
+   * Функция подвешивания обработчиков событий на каждый элемент из списка с помощью цикла
    */
-
   window.popup = {
-    getElementData: function (data) {
-      pictureList = data;
+    getElementData: function (nodeList) {
+      pictureList = nodeList;
       for (var i = 0; i < pictureList.length; i++) {
 
         pictureList[i].addEventListener('click', onPictureClick);
