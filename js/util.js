@@ -10,6 +10,8 @@
     ENTER: 13,
     ESC: 27
   };
+  var DEBOUNCE_INTERVAL = 500;
+  var lastTimeout;
   /**
    * Интерфейс модуля. Запись вспомогательных функций в глобальный объект Window.
    * @type {{getRandomInt: Window.util.getRandomInt, isEscEvent: Window.util.isEscEvent, isEnterEvent: Window.util.isEnterEvent}}
@@ -44,7 +46,12 @@
       errorMessage.style.backgroundColor = 'rgb(240, 90, 90)';
       errorMessage.style.borderRadius = '5px';
       document.body.appendChild(errorMessage);
+    },
+    debounce: function (fun) {
+      if (lastTimeout) {
+        window.clearTimeout(lastTimeout);
+      }
+      lastTimeout = window.setTimeout(fun, DEBOUNCE_INTERVAL);
     }
   };
 })();
-

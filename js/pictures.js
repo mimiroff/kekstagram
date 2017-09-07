@@ -5,36 +5,48 @@
 'use strict';
 
 (function () {
-  /**
-   * Функция создания массива объектов (фотографий) со случайно сгенерированным количеством лайков,
-   * комментариями, случайно взятыми из подготовленного массива и адресом картинки в локальной папке
-   * @param {Number} quantity
-   * @return {Array}
-   */
-  /* var generatePhotos = function (quantity) {
-    var comments = ['Всё отлично!', 'В целом не плохо. Но не всё.',
-      'Когда вы делаете фотографию, хорошо бы убрать палец из кадра. В конце концов это просто непрофессионально',
-      'Моя бабушка случайно чихнула с фотоаппаратом в руках и у неё получилась фотография лучше.',
-      'Я поскользнулся на банановой кожуре и уронил фотоаппарат на кота и у меня получилась фотография лучше',
-      'Лица у людей на фотке перекошены, как будто их избивают. Как можно было поймать такой недачный момент?'];
 
-    var photos = [];
+  var sortPhotos = function (evt, data) {
+    var sortedData;
 
-    for (var i = 1; i <= quantity; i++) {
-      var photo = {
-        url: 'photos/' + i + '.jpg',
-        likes: window.util.getRandomInt(15, 201)
-      };
-      if (window.util.getRandomInt(0, 2) > 0) {
-        photo.comments = [comments[window.util.getRandomInt(0, comments.length)], comments[window.util.getRandomInt(0, comments.length)]];
-      } else {
-        photo.comments = [comments[window.util.getRandomInt(0, comments.length)]];
-      }
-      photos.push(photo);
+    var updatePhoto = function () {
+      showPhotoElements(sortedData);
+    };
+
+    switch (evt.target.value) {
+      case 'popular':
+        sortedData = data.slice().sort(function (left, right) {
+          return right.likes - left.likes;
+        });
+        break;
+      case 'discussed':
+        sortedData = data.slice().sort((function (left, right) {
+          return right.comments.length - left.comments.length;
+        }));
+        break;
+      case 'random':
+        sortedData = data.slice().sort(function () {
+          return Math.random() - 0.5;
+        });
+        break;
+      case 'recommend':
+        sortedData = data;
+        break;
     }
+    window.util.debounce(updatePhoto);
+  };
 
-    return photos;
-  };*/
+  var showFilter = function (data) {
+    var filtersForm = document.querySelector('.filters');
+    filtersForm.classList.remove('hidden');
+    filtersForm.querySelectorAll('.filters-radio').forEach(function (element) {
+      element.addEventListener('click', function (evt) {
+        sortPhotos(evt, data);
+      });
+    });
+    showPhotoElements(data);
+  };
+
   /**
    * Функция создания DOM элемента на основе шаблона, с комтентом, составленным из данных, содержащихся в
    * объекте, создаваемым функцией generatePhotos
@@ -60,9 +72,12 @@
     for (var i = 0; i < photos.length; i++) {
       fragment.appendChild(generateElements(photos[i]));
     }
+    while (pictures.firstChild) {
+      pictures.removeChild(pictures.firstChild);
+    }
     pictures.appendChild(fragment);
+
     window.popup.getElementData(pictures.querySelectorAll('.picture'));
   };
-  window.backend.load(showPhotoElements, window.util.renderError);
+  window.backend.load(showFilter, window.util.renderError);
 })();
-
