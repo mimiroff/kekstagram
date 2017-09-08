@@ -15,7 +15,8 @@
 
   var scaleElement = framingForm.querySelector('.upload-resize-controls');
   var pictureSizeField = framingForm.querySelector('.upload-resize-controls-value');
-  var imagePreview = framingForm.querySelector('.effect-image-preview');
+  var uploadFormPreview = framingForm.querySelector('.upload-form-preview');
+  var imagePreview = uploadFormPreview.querySelector('.effect-image-preview');
   var effectControls = framingForm.querySelector('.upload-effect-controls');
   var effectLevelControls = framingForm.querySelector('.upload-effect-level');
   var effectLevelLine = effectLevelControls.querySelector('.upload-effect-level-line');
@@ -36,9 +37,11 @@
     uploadSubmit.addEventListener('click', onUploadSubmitClick);
     uploadSubmit.addEventListener('keydown', onUploadSubmitEnterPress);
     effectControls.addEventListener('click', onEffectControlsClick);
+    effectLevelControls.classList.remove('hidden');
     window.initializeFilters.setCoords(effectLevelLine.getBoundingClientRect().width, 'max');
     effectLevelControls.classList.add('hidden');
     scaleElement.addEventListener('click', onPictureSizeButtonClick);
+    imagePreview.addEventListener('mousedown', onImagePreviewMove);
   };
   /**
    * Функция закрытия формы кадрирования. При закрытии попапа показывает форму загрузки изображения, а также
@@ -48,6 +51,14 @@
     framingForm.classList.add('hidden');
     uploadForm.classList.remove('hidden');
     document.removeEventListener('keydown', onDocumentEscPress);
+    uploadFormReset();
+  };
+
+  var uploadFormReset = function () {
+    var filterNone = document.querySelector('#upload-effect-none');
+    window.initializeFilters.initializeFilters(filterNone, effectFilterOn);
+    window.initializeScale.initializeScale(null, 100, pictureSizeChange);
+    form.reset();
   };
 
     /**
@@ -58,7 +69,7 @@
    * @param {Object} evt
    */
   var uploadFormSubmit = function (evt) {
-    evt.preventDefault();
+    window.util.preventDefaultAction(evt);
     hashTagForm.style.borderColor = null;
     hashTagForm.style.borderWidth = null;
     commentForm.style.borderColor = null;
@@ -99,14 +110,8 @@
     } else if (mismatchCount > 0) {
       errorHighlight(hashTagForm);
     } else {
-      window.backend.save(new FormData(form), onSaveSuccess, window.util.renderError);
+      window.backend.save(new FormData(form), framingFormClose, window.util.renderError);
     }
-  };
-
-  var onSaveSuccess = function () {
-    framingForm.classList.add('hidden');
-    uploadForm.classList.remove('hidden');
-    form.reset();
   };
 
   /**
@@ -143,6 +148,34 @@
     pictureSizeField.value = scale + '%';
     imagePreview.style.transform = 'scale(' + (scale / 100) + ')';
   };
+
+  var handleFiles = function (files) {
+    imagePreview.file = files[0];
+
+    var reader = new FileReader();
+    reader.onload = (function (img) {
+      return function (evt) {
+        img.src = evt.target.result;
+      };
+    })(imagePreview);
+    reader.readAsDataURL(files[0]);
+
+    framingFormOpen();
+  };
+
+  var upload = function (evt) {
+    window.util.preventDefaultAction(evt);
+    var files;
+
+    if (evt.dataTransfer) {
+      var dt = evt.dataTransfer;
+      files = dt.files;
+    } else {
+      files = evt.target.files;
+    }
+    handleFiles(files);
+  };
+
   /**
    * Функция обработчика события нажатия ESC
    * @param {Object} evt
@@ -182,9 +215,9 @@
   /**
    * Функция обработчика события изменения значения поля input (загрузка файла)
    */
-  var onUploadInputChange = function () {
+ /* var onUploadInputChange = function () {
     framingFormOpen();
-  };
+  };*/
   /**
    * Функция - обработчик события клика на кнопки изменения масштаба загружаемого изображения
    * @param {Object} evt
@@ -232,8 +265,54 @@
     framingForm.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
   };
+
+  var onImagePreviewMove = function (evt) {
+    evt.preventDefault();
+    var startCoords = {
+      x: evt.clientX,
+      y: evt.clientY
+    };
+    uploadFormPreview.style.position = 'relative';
+
+    var onMouseMoveImage = function (moveEvt) {
+      moveEvt.preventDefault();
+
+      var shift = {
+        x: startCoords.x - moveEvt.clientX,
+        y: startCoords.y - moveEvt.clientY
+      };
+
+      startCoords = {
+        x: moveEvt.clientX,
+        y: moveEvt.clientY
+      };
+      uploadFormPreview.style.top = (uploadFormPreview.offsetTop - shift.y) + 'px';
+      uploadFormPreview.style.left = (uploadFormPreview.offsetLeft - shift.x) + 'px';
+    };
+
+    var onMouseUp = function (upEvt) {
+      upEvt.preventDefault();
+      document.removeEventListener('mousemove', onMouseMoveImage);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+
+    document.addEventListener('mousemove', onMouseMoveImage);
+    document.addEventListener('mouseup', onMouseUp);
+  };
+
+  var onUploadControlDrop = function (evt) {
+    upload(evt);
+  };
+
+  var onUploadInputChange = function (evt) {
+    upload(evt);
+  };
+
   /**
-   * Регистрация обрабочика события на поле input (загрузка файла)
+   * Регистрация обрабочика события на input и label загрузки файла
    */
+  uploadForm.querySelector('.upload-control').addEventListener('dragenter', window.util.preventDefaultAction);
+  uploadForm.querySelector('.upload-control').addEventListener('dragover', window.util.preventDefaultAction);
+  uploadForm.querySelector('.upload-control').addEventListener('drop', onUploadControlDrop);
   uploadInput.addEventListener('change', onUploadInputChange);
 })();

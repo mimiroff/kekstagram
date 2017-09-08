@@ -1,11 +1,15 @@
 /**
  * pictures.js
- * Модуль генерации и отрисовки элементов (фотографий) на главной странице Кекстограм.
+ * Модуль отрисовки элементов (фотографий) на главной странице Кекстограм.
  */
 'use strict';
 
 (function () {
-
+  /**
+   * Функция изменения порядка отображения фотографий на странице, в зависимости от выбранного фильтра
+   * @param {Event} evt
+   * @param {Array} data
+   */
   var sortPhotos = function (evt, data) {
     var sortedData;
 
@@ -35,7 +39,10 @@
     }
     window.util.debounce(updatePhoto);
   };
-
+  /**
+   * Функция отрисовки формы фильтрации изображений на странице
+   * @param {Object} data
+   */
   var showFilter = function (data) {
     var filtersForm = document.querySelector('.filters');
     filtersForm.classList.remove('hidden');
@@ -46,10 +53,8 @@
     });
     showPhotoElements(data);
   };
-
   /**
-   * Функция создания DOM элемента на основе шаблона, с комтентом, составленным из данных, содержащихся в
-   * объекте, создаваемым функцией generatePhotos
+   * Функция создания DOM элемента на основе шаблона, с комтентом, составленным из загруженных с сервера данных
    * @param {Object} photo
    * @return {Node}
    */
@@ -62,16 +67,16 @@
     return photoElement;
   };
   /**
-   * Функция отрисовки сгенерированных функцией generateElements DOM элементов на страницу, используя
-   * фрагмент
-   * @param {Function} photos
+   * Функция отрисовки сгенерированных DOM элементов на страницу, используя Fragment
+   * @param {NodeList} photos
    */
   var showPhotoElements = function (photos) {
     var fragment = document.createDocumentFragment();
     var pictures = document.querySelector('.pictures');
-    for (var i = 0; i < photos.length; i++) {
-      fragment.appendChild(generateElements(photos[i]));
-    }
+
+    [].slice.call(photos).forEach(function (it) {
+      fragment.appendChild(generateElements(it));
+    });
     while (pictures.firstChild) {
       pictures.removeChild(pictures.firstChild);
     }

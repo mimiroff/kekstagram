@@ -38,6 +38,7 @@
      */
     initializeFilters: function (filterElement, applyFilter, coords) {
       activeElement = filterElement;
+
       if (typeof coords !== 'number') {
         pinCoords = dftCoords;
       } else {

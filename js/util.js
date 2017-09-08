@@ -52,6 +52,10 @@
         window.clearTimeout(lastTimeout);
       }
       lastTimeout = window.setTimeout(fun, DEBOUNCE_INTERVAL);
+    },
+    preventDefaultAction: function (evt) {
+      evt.stopPropagation();
+      evt.preventDefault();
     }
   };
 })();
