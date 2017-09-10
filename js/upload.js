@@ -63,8 +63,7 @@
 
     /**
    * Функция отправки формы кадрирования загружаемого изображения. Перед отправкой проверяет правильность заполнения
-   * полей хеш-тегов и комментариев. Поле комментариев является обязательным, минимальное количество символов - 20,
-   * максимальное - 100. Поле хеш-тегов необязательное, может содержать максмимум пять хеш-тегов, разделенных между
+   * поля хеш-тегов. Поле хеш-тегов необязательное, может содержать максмимум пять хеш-тегов, разделенных между
    * собой пробелом. Каждый хеш-тег начинается с #, уникален и не превышает 20 символов.
    * @param {Object} evt
    */
@@ -72,45 +71,34 @@
     window.util.preventDefaultAction(evt);
     hashTagForm.style.borderColor = null;
     hashTagForm.style.borderWidth = null;
-    commentForm.style.borderColor = null;
-    commentForm.style.borderWidth = null;
 
     var errorHighlight = function (node) {
       node.style.borderColor = 'red';
       node.style.borderWidth = '2px';
     };
 
-    var hashtagValue = hashTagForm.value;
-    var hashtagValues = hashtagValue.split([' ']);
-    var maxHashtagLength = 20;
-    var maxHashtagCount = 5;
-    var mismatchCount = 0;
+    if (!hashTagForm.value) {
+      window.backend.save(new FormData(form), framingFormClose, window.util.renderError);
+    } else {
+      var hashtagValue = hashTagForm.value;
+      var hashtagValues = hashtagValue.split([' ']);
+      var maxHashtagCount = 5;
+      var mismatchCount = 0;
 
-    if (hashtagValues.length > maxHashtagCount) {
-      mismatchCount++;
-    }
-
-    for (var i = 0; i < hashtagValues.length; i++) {
-      if (hashtagValues.includes(hashtagValues[i], i + 1)) {
+      if (hashtagValues.length > maxHashtagCount) {
         mismatchCount++;
       }
-      if (hashtagValues[i].length > maxHashtagLength) {
-        mismatchCount++;
-      }
-      if (hashtagValue.length > 0 && hashtagValues[i].split('')[0] !== '#') {
-        mismatchCount++;
-      }
-    }
 
-    if (!commentForm.validity.valid) {
-      errorHighlight(commentForm);
+      for (var i = 0; i < hashtagValues.length; i++) {
+        if (hashtagValues.includes(hashtagValues[i], i + 1) || hashtagValues[i].search(/^[#][\w]{1,19}$/) === -1) {
+          mismatchCount++;
+        }
+      }
       if (mismatchCount > 0) {
         errorHighlight(hashTagForm);
+      } else {
+        window.backend.save(new FormData(form), framingFormClose, window.util.renderError);
       }
-    } else if (mismatchCount > 0) {
-      errorHighlight(hashTagForm);
-    } else {
-      window.backend.save(new FormData(form), framingFormClose, window.util.renderError);
     }
   };
 
