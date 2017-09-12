@@ -53,7 +53,9 @@
     document.removeEventListener('keydown', onDocumentEscPress);
     uploadFormReset();
   };
-
+  /**
+   * Функция сброса формы
+   */
   var uploadFormReset = function () {
     var filterNone = document.querySelector('#upload-effect-none');
     window.initializeFilters.initializeFilters(filterNone, effectFilterOn);
@@ -82,22 +84,19 @@
     } else {
       var hashtagValue = hashTagForm.value;
       var hashtagValues = hashtagValue.split([' ']);
-      var maxHashtagCount = 5;
+      var MAX_HASHTAG_COUNT = 5;
       var mismatchCount = 0;
-
-      if (hashtagValues.length > maxHashtagCount) {
-        mismatchCount++;
-      }
 
       for (var i = 0; i < hashtagValues.length; i++) {
         if (hashtagValues.includes(hashtagValues[i], i + 1) || hashtagValues[i].search(/^[#][\w]{1,19}$/) === -1) {
           mismatchCount++;
         }
       }
-      if (mismatchCount > 0) {
-        errorHighlight(hashTagForm);
-      } else {
+
+      if (mismatchCount === 0 && hashtagValues.length <= MAX_HASHTAG_COUNT) {
         window.backend.save(new FormData(form), framingFormClose, window.util.renderError);
+      } else {
+        errorHighlight(hashTagForm);
       }
     }
   };
@@ -137,6 +136,10 @@
     imagePreview.style.transform = 'scale(' + (scale / 100) + ')';
   };
 
+  /**
+   * Функция - обработки данных (путь) загружаемого изображения
+   * @param {Array} files
+   */
   var handleFiles = function (files) {
     imagePreview.file = files[0];
 
@@ -150,7 +153,10 @@
 
     framingFormOpen();
   };
-
+  /**
+   * Функция обработки извлечения данных загружаемого изображения
+   * @param {Event} evt
+   */
   var upload = function (evt) {
     window.util.preventDefaultAction(evt);
     var files;
@@ -166,7 +172,7 @@
 
   /**
    * Функция обработчика события нажатия ESC
-   * @param {Object} evt
+   * @param {Event} evt
    */
   var onDocumentEscPress = function (evt) {
     if (commentForm !== document.activeElement) {
@@ -181,34 +187,28 @@
   };
   /**
    * Функция обработчика события нажатия ENTER на кнопке формы reset
-   * @param {Object} evt
+   * @param {Event} evt
    */
   var onUploadCancelEnterPress = function (evt) {
     window.util.isEnterEvent(evt, framingFormClose);
   };
   /**
    * Функция обработчика события клика на кнопке формы submit
-   * @param {Object} evt
+   * @param {Event} evt
    */
   var onUploadSubmitClick = function (evt) {
     uploadFormSubmit(evt);
   };
   /**
    * Функция обработчика события нажатия ENTER на кнопке формы submit
-   * @param {Object} evt
+   * @param {Event} evt
    */
   var onUploadSubmitEnterPress = function (evt) {
     window.util.isEnterEvent(evt, uploadFormSubmit);
   };
-  /**
-   * Функция обработчика события изменения значения поля input (загрузка файла)
-   */
- /* var onUploadInputChange = function () {
-    framingFormOpen();
-  };*/
-  /**
+   /**
    * Функция - обработчик события клика на кнопки изменения масштаба загружаемого изображения
-   * @param {Object} evt
+   * @param {Event} evt
    */
   var onPictureSizeButtonClick = function (evt) {
     var value = +pictureSizeField.value.substring(0, pictureSizeField.value.length - 1);
@@ -221,7 +221,7 @@
     window.initializeScale.initializeScale(scaleElementValue, value, pictureSizeChange);
   };
    /** Функция - обработчик события (клик) на чекбоксе графического фильтра через делегирование
-   * @param {Object} evt
+   * @param {Event} evt
    */
   var onEffectControlsClick = function (evt) {
     var target = evt.target;
@@ -233,8 +233,8 @@
     }
   };
   /**
-   * Функция - обработчик события клика на пин изменения интенсивности применяемого графического фильтра
-   * @param {Object} evt
+   * Функция - обработчик перетаскивания пина изменения интенсивности применяемого графического фильтра
+   * @param {Event} evt
    */
   var onEffectPinMove = function (evt) {
     evt.preventDefault();
@@ -253,7 +253,10 @@
     framingForm.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
   };
-
+  /**
+   * Функция - обработчик перетаскивания изображения
+   * @param {Event} evt
+   */
   var onImagePreviewMove = function (evt) {
     evt.preventDefault();
     var startCoords = {
@@ -262,7 +265,7 @@
     };
     uploadFormPreview.style.position = 'relative';
 
-    var onMouseMoveImage = function (moveEvt) {
+    var onMouseMove = function (moveEvt) {
       moveEvt.preventDefault();
 
       var shift = {
@@ -280,11 +283,11 @@
 
     var onMouseUp = function (upEvt) {
       upEvt.preventDefault();
-      document.removeEventListener('mousemove', onMouseMoveImage);
+      document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
     };
 
-    document.addEventListener('mousemove', onMouseMoveImage);
+    document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
   };
 
