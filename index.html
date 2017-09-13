@@ -96,7 +96,6 @@
       </fieldset>
 
       <input class="upload-form-hashtags" name="hashtags" placeholder="#хэш-тег"
-             pattern="([#][A-Za-zА-Яа-яЁё]{1,19})?(\s[#][A-Za-zА-Яа-яЁё]{1,19}){0,4}"
              title="#хеш-теги должны начинаться с #, ограничены длиной в 20 символов, должны быть уникальными и не более пяти">
 
       <textarea class="upload-form-description" name="description" placeholder="Ваш комментарий..." minlength="30" maxlength="100"
@@ -159,6 +158,8 @@
   </a>
 </template>
 <script src="./js/util.js"></script>
+<script src="./js/initialize-scale.js"></script>
+<script src="./js/initialize-filters.js"></script>
 <script src="./js/pictures.js"></script>
 <script src="./js/popup.js"></script>
 <script src="./js/upload.js"></script>

@@ -13,23 +13,14 @@
   var commentForm = framingForm.querySelector('.upload-form-description');
   var hashTagForm = framingForm.querySelector('.upload-form-hashtags');
 
+  var scaleElement = framingForm.querySelector('.upload-resize-controls');
   var pictureSizeField = framingForm.querySelector('.upload-resize-controls-value');
-  var pictureSizeDecButton = framingForm.querySelector('.upload-resize-controls-button-dec');
-  var pictureSizeIncButton = framingForm.querySelector('.upload-resize-controls-button-inc');
   var imagePreview = framingForm.querySelector('.effect-image-preview');
   var effectControls = framingForm.querySelector('.upload-effect-controls');
   var effectLevelControls = framingForm.querySelector('.upload-effect-level');
   var effectLevelLine = effectLevelControls.querySelector('.upload-effect-level-line');
   var effectPin = effectLevelLine.querySelector('.upload-effect-level-pin');
   var effectLevel = effectLevelLine.querySelector('.upload-effect-level-val');
-
-  var effectLevelCoords = null;
-  var activeFilter = null;
-
-  var minCoords = 0;
-  var maxCoords = null;
-
-  var value = +pictureSizeField.value.substring(0, pictureSizeField.value.length - 1);
 
   /**
    * Функция открытия формы кадрирования загружаемого изображения. При открытии попапа закрывает форму загрузки
@@ -44,8 +35,10 @@
     uploadCancel.addEventListener('keydown', onUploadCancelEnterPress);
     uploadSubmit.addEventListener('click', onUploadSubmitClick);
     uploadSubmit.addEventListener('keydown', onUploadSubmitEnterPress);
-    maxCoords = effectLevelLine.getBoundingClientRect().width;
+    effectControls.addEventListener('click', onEffectControlsClick);
+    window.initializeFilters.setCoords(effectLevelLine.getBoundingClientRect().width, 'max');
     effectLevelControls.classList.add('hidden');
+    scaleElement.addEventListener('click', onPictureSizeButtonClick);
   };
   /**
    * Функция закрытия формы кадрирования. При закрытии попапа показывает форму загрузки изображения, а также
@@ -56,7 +49,8 @@
     uploadForm.classList.remove('hidden');
     document.removeEventListener('keydown', onDocumentEscPress);
   };
-  /**
+
+    /**
    * Функция отправки формы кадрирования загружаемого изображения. Перед отправкой проверяет правильность заполнения
    * полей хеш-тегов и комментариев. Поле комментариев является обязательным, минимальное количество символов - 20,
    * максимальное - 100. Поле хеш-тегов необязательное, может содержать максмимум пять хеш-тегов, разделенных между
@@ -65,105 +59,84 @@
    */
   var uploadFormSubmit = function (evt) {
     evt.preventDefault();
-    commentForm.style.borderColor = null;
-    commentForm.style.borderWidth = null;
     hashTagForm.style.borderColor = null;
     hashTagForm.style.borderWidth = null;
+    commentForm.style.borderColor = null;
+    commentForm.style.borderWidth = null;
+
+    var errorHighlight = function (node) {
+      node.style.borderColor = 'red';
+      node.style.borderWidth = '2px';
+    };
+
     var hashtagValue = hashTagForm.value;
     var hashtagValues = hashtagValue.split([' ']);
-    var matchCount = 0;
+    var maxHashtagLength = 20;
+    var maxHashtagCount = 5;
+    var mismatchCount = 0;
+
+    if (hashtagValues.length > maxHashtagCount) {
+      mismatchCount++;
+    }
+
     for (var i = 0; i < hashtagValues.length; i++) {
       if (hashtagValues.includes(hashtagValues[i], i + 1)) {
-        matchCount++;
+        mismatchCount++;
+      }
+      if (hashtagValues[i].length > maxHashtagLength) {
+        mismatchCount++;
+      }
+      if (hashtagValue.length > 0 && hashtagValues[i].split('')[0] !== '#') {
+        mismatchCount++;
       }
     }
+
     if (!commentForm.validity.valid) {
-      commentForm.style.borderColor = 'red';
-      commentForm.style.borderWidth = '2px';
-      if (hashTagForm.validity.patternMismatch) {
-        hashTagForm.style.borderColor = 'red';
-        hashTagForm.style.borderWidth = '2px';
-      } else if (matchCount > 0) {
-        hashTagForm.style.borderColor = 'red';
-        hashTagForm.style.borderWidth = '2px';
+      errorHighlight(commentForm);
+      if (mismatchCount > 0) {
+        errorHighlight(hashTagForm);
       }
-    } else if (hashTagForm.validity.patternMismatch) {
-      hashTagForm.style.borderColor = 'red';
-      hashTagForm.style.borderWidth = '2px';
-    } else if (matchCount > 0) {
-      hashTagForm.style.borderColor = 'red';
-      hashTagForm.style.borderWidth = '2px';
+    } else if (mismatchCount > 0) {
+      errorHighlight(hashTagForm);
     } else {
       form.submit();
     }
   };
-  /**
-   * Функция увеличения масштаба загружаемого изображения
-   */
-  var pictureSizeFieldInc = function () {
-    var maxScale = 100;
-    var step = 25;
-    if (value < maxScale) {
-      value = value + step;
-      pictureSizeField.value = value + '%';
-      imagePreview.style = 'transform: scale(' + (value / 100) + ')';
-    }
-  };
-  /**
-   * Функция уменьшения масштаба загружаемого изображения
-   */
-  var pictureSizeFieldDec = function () {
-    var minScale = 25;
-    var step = 25;
-    if (value > minScale) {
-      value = value - step;
-      pictureSizeField.value = value + '%';
-      imagePreview.style = 'transform: scale(' + (value / 100) + ')';
-    }
-  };
 
   /**
-   * Функция приминения графического эффекта к загружаемому изображению
-   * @param {Object} node
+   * Функция применения к загружаемому изображению стиля, соответствующего включенному графическому фильтру
+   * @param {String} filter
+   * @param {Number} coords
    */
-  var effectFilterOn = function (node) {
-    var dftCoords = (maxCoords * 0.2);
-    effectLevelCoords = dftCoords;
-    activeFilter = node;
+  var effectFilterOn = function (filter, coords) {
 
-    var setDefaultCoords = function () {
-      effectPin.style.left = dftCoords + 'px';
-      effectLevel.style.width = dftCoords + 'px';
+    imagePreview.style.filter = filter;
+
+    if (filter !== 'none') {
+      setPinCoords(coords);
       effectLevelControls.classList.remove('hidden');
-    };
-
-    switch (activeFilter.value) {
-      case 'chrome':
-        setDefaultCoords();
-        imagePreview.style.filter = 'grayscale(' + (effectLevelCoords / maxCoords) + ')';
-        break;
-      case 'sepia':
-        setDefaultCoords();
-        imagePreview.style.filter = 'sepia(' + (effectLevelCoords / maxCoords) + ')';
-        break;
-      case 'marvin':
-        setDefaultCoords();
-        imagePreview.style.filter = 'invert(' + (effectLevelCoords / (maxCoords / 100)) + '%)';
-        break;
-      case 'phobos':
-        setDefaultCoords();
-        imagePreview.style.filter = 'blur(' + (effectLevelCoords / (maxCoords / 3)) + 'px)';
-        break;
-      case 'heat':
-        setDefaultCoords();
-        imagePreview.style.filter = 'brightness(' + (effectLevelCoords / (maxCoords / 3)) + ')';
-        break;
-      default: imagePreview.style.filter = 'none';
-        effectLevelControls.classList.add('hidden');
-        break;
+      effectPin.addEventListener('mousedown', onEffectPinMove);
+    } else {
+      effectPin.removeEventListener('mousedown', onEffectPinMove);
+      effectLevelControls.classList.add('hidden');
     }
   };
-
+  /**
+   * Функция, устанавливающая координаты пину интенсивности графического фильтра
+   * @param {Number} coords
+   */
+  var setPinCoords = function (coords) {
+    effectPin.style.left = coords + 'px';
+    effectLevel.style.width = (coords - 9) + 'px';
+  };
+  /**
+   * Функция изменения масштаба загружаемого изображения
+   * @param {Number} scale
+   */
+  var pictureSizeChange = function (scale) {
+    pictureSizeField.value = scale + '%';
+    imagePreview.style.transform = 'scale(' + (scale / 100) + ')';
+  };
   /**
    * Функция обработчика события нажатия ESC
    * @param {Object} evt
@@ -206,82 +179,42 @@
   var onUploadInputChange = function () {
     framingFormOpen();
   };
-
   /**
-   * Функция - обработчик события (клик) на кнопке увеличения масштаба изображения
+   * Функция - обработчик события клика на кнопки изменения масштаба загружаемого изображения
+   * @param {Object} evt
    */
-  var onPictureSizeIncButtonClick = function () {
-    pictureSizeFieldInc();
+  var onPictureSizeButtonClick = function (evt) {
+    var value = +pictureSizeField.value.substring(0, pictureSizeField.value.length - 1);
+    var scaleElementValue = null;
+    if (evt.target.className.includes('upload-resize-controls-button-inc')) {
+      scaleElementValue = 'inc';
+    } else if (evt.target.className.includes('upload-resize-controls-button-dec')) {
+      scaleElementValue = 'dec';
+    }
+    window.initializeScale.initializeScale(scaleElementValue, value, pictureSizeChange);
   };
-  /**
-   * Функция - обработчик события (клик) на кнопке уменьшения масштаба изображения
-   */
-  var onPictureSizeDecButtonClick = function () {
-    pictureSizeFieldDec();
-  };
-  /**
-   * Функция - обработчик события (клик) на чекбоксе графического фильтра через делегирование
+   /** Функция - обработчик события (клик) на чекбоксе графического фильтра через делегирование
    * @param {Object} evt
    */
   var onEffectControlsClick = function (evt) {
     var target = evt.target;
     while (target !== effectControls) {
       if (target.tagName === 'INPUT') {
-        effectFilterOn(target);
+        window.initializeFilters.initializeFilters(target, effectFilterOn);
       }
       target = target.parentNode;
     }
   };
-
   /**
-   * Регистрация обрабочика события на поле input (загрузка файла)
+   * Функция - обработчик события клика на пин изменения интенсивности применяемого графического фильтра
+   * @param {Object} evt
    */
-  uploadInput.addEventListener('change', onUploadInputChange);
-
-  /**
-   * Регистрация обработчиков событий на кнопках уменьшения и увеличения масштаба и на
-   * чекбоксах графического фильтра
-   */
-  pictureSizeDecButton.addEventListener('click', onPictureSizeDecButtonClick);
-  pictureSizeIncButton.addEventListener('click', onPictureSizeIncButtonClick);
-  effectControls.addEventListener('click', onEffectControlsClick);
-  effectPin.addEventListener('mousedown', function (evt) {
+  var onEffectPinMove = function (evt) {
     evt.preventDefault();
-    var startCoords = evt.clientX;
+    window.initializeFilters.setCoords(evt.clientX, 'start');
 
     var onMouseMove = function (moveEvt) {
-      moveEvt.preventDefault();
-      var shift = startCoords - moveEvt.clientX;
-      startCoords = moveEvt.clientX;
-
-      if (effectPin.offsetLeft > maxCoords) {
-        effectLevelCoords = maxCoords;
-        effectPin.style.left = effectLevelCoords + 'px';
-        effectLevel.style.width = effectLevelCoords + 'px';
-      } else if (effectPin.offsetLeft < minCoords) {
-        effectLevelCoords = minCoords;
-        effectPin.style.left = effectLevelCoords + 'px';
-        effectLevel.style.width = effectLevelCoords + 'px';
-      } else {
-        effectLevelCoords = (effectPin.offsetLeft - shift);
-        effectPin.style.left = effectLevelCoords + 'px';
-        effectLevel.style.width = effectLevelCoords + 'px';
-      }
-
-      switch (activeFilter.value) {
-        case 'chrome': imagePreview.style.filter = 'grayscale(' + (effectLevelCoords / maxCoords) + ')';
-          break;
-        case 'sepia': imagePreview.style.filter = 'sepia(' + (effectLevelCoords / maxCoords) + ')';
-          break;
-        case 'marvin': imagePreview.style.filter = 'invert(' + (effectLevelCoords / (maxCoords / 100)) + '%)';
-          break;
-        case 'phobos': imagePreview.style.filter = 'blur(' + (effectLevelCoords / (maxCoords / 3)) + 'px)';
-          break;
-        case 'heat': imagePreview.style.filter = 'brightness(' + (effectLevelCoords / (maxCoords / 3)) + ')';
-          break;
-        default:
-          break;
-      }
+      window.initializeFilters.filtersPinMove(moveEvt, effectPin, effectFilterOn);
     };
 
     var onMouseUp = function (upEvt) {
@@ -292,5 +225,10 @@
 
     framingForm.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
-  });
+  };
+  /**
+   * Регистрация обрабочика события на поле input (загрузка файла)
+   */
+  uploadInput.addEventListener('change', onUploadInputChange);
+
 })();
