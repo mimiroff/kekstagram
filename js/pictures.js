@@ -11,7 +11,7 @@
    * @param {Number} quantity
    * @return {Array}
    */
-  var generatePhotos = function (quantity) {
+  /* var generatePhotos = function (quantity) {
     var comments = ['Всё отлично!', 'В целом не плохо. Но не всё.',
       'Когда вы делаете фотографию, хорошо бы убрать палец из кадра. В конце концов это просто непрофессионально',
       'Моя бабушка случайно чихнула с фотоаппаратом в руках и у неё получилась фотография лучше.',
@@ -34,7 +34,7 @@
     }
 
     return photos;
-  };
+  };*/
   /**
    * Функция создания DOM элемента на основе шаблона, с комтентом, составленным из данных, содержащихся в
    * объекте, создаваемым функцией generatePhotos
@@ -61,8 +61,8 @@
       fragment.appendChild(generateElements(photos[i]));
     }
     pictures.appendChild(fragment);
+    window.popup.getElementData(pictures.querySelectorAll('.picture'));
   };
-
-  showPhotoElements(generatePhotos(25));
+  window.backend.load(showPhotoElements, window.util.renderError);
 })();
 

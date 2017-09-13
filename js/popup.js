@@ -6,8 +6,8 @@
 
 (function () {
   var gallery = document.querySelector('.gallery-overlay');
-  var pictureList = document.querySelectorAll('.picture');
   var galleryClose = gallery.querySelector('.gallery-overlay-close');
+  var pictureList;
   /**
    * Функция закрытия попапа
    */
@@ -80,11 +80,16 @@
   galleryClose.addEventListener('keydown', onGalleryCloseEnterPress);
 
   /**
-   * подвешивание обработчиков событий на каждую картинку с помощью цикла
+   * Функция подвешивания обработчиков событий на каждый элемент из списка с помощью цикла
    */
-  for (var i = 0; i < pictureList.length; i++) {
+  window.popup = {
+    getElementData: function (nodeList) {
+      pictureList = nodeList;
+      for (var i = 0; i < pictureList.length; i++) {
 
-    pictureList[i].addEventListener('click', onPictureClick);
-    pictureList[i].addEventListener('keydown', onPictureEnterPress);
-  }
+        pictureList[i].addEventListener('click', onPictureClick);
+        pictureList[i].addEventListener('keydown', onPictureEnterPress);
+      }
+    }
+  };
 })();
