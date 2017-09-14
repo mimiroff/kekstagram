@@ -8,13 +8,14 @@
   /**
    * Служебные переменные, используемые в данном модуле
    */
-  var maxCoords = null;
-  var minCoords = 0;
-  var dftRatio = 0.2;
-  var dftCoords = null;
-  var startCoords = null;
-  var pinCoords = null;
-  var activeElement = null;
+
+  var MIN_COORDS = 0;
+  var DEFAULT_RATIO = 0.2;
+  var maxCoords;
+  var dftCoords;
+  var startCoords;
+  var pinCoords;
+  var activeElement;
 
   window.initializeFilters = {
     /**
@@ -25,7 +26,7 @@
     setCoords: function (number, type) {
       if (type === 'max') {
         maxCoords = number;
-        dftCoords = (maxCoords * dftRatio);
+        dftCoords = (maxCoords * DEFAULT_RATIO);
       } else if (type === 'start') {
         startCoords = number;
       }
@@ -38,6 +39,7 @@
      */
     initializeFilters: function (filterElement, applyFilter, coords) {
       activeElement = filterElement;
+
       if (typeof coords !== 'number') {
         pinCoords = dftCoords;
       } else {
@@ -80,8 +82,8 @@
 
       if (pinElement.offsetLeft > maxCoords) {
         pinCoords = maxCoords;
-      } else if (pinElement.offsetLeft < minCoords) {
-        pinCoords = minCoords;
+      } else if (pinElement.offsetLeft < MIN_COORDS) {
+        pinCoords = MIN_COORDS;
       } else {
         pinCoords = (pinElement.offsetLeft - shift);
       }

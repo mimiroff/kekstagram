@@ -7,13 +7,15 @@
 (function () {
   var gallery = document.querySelector('.gallery-overlay');
   var galleryClose = gallery.querySelector('.gallery-overlay-close');
-  var pictureList;
+
   /**
    * Функция закрытия попапа
    */
   var closePopup = function () {
     gallery.classList.add('hidden');
     document.removeEventListener('keydown', onDocumentEscPress);
+    galleryClose.removeEventListener('click', onGalleryCloseClick);
+    galleryClose.removeEventListener('keydown', onGalleryCloseEnterPress);
   };
   /**
    * Функция открытия попапа
@@ -21,8 +23,10 @@
    */
   var openPopup = function (evt) {
     gallery.classList.remove('hidden');
-    renderPopup(evt);
     document.addEventListener('keydown', onDocumentEscPress);
+    galleryClose.addEventListener('click', onGalleryCloseClick);
+    galleryClose.addEventListener('keydown', onGalleryCloseEnterPress);
+    renderPopup(evt);
   };
   /**
    * Функция отрисовки в попапе данных, выбранного элемента
@@ -42,7 +46,7 @@
    * @param {Object} evt
    */
   var onPictureClick = function (evt) {
-    evt.preventDefault();
+    window.util.preventDefaultAction(evt);
     openPopup(evt);
   };
   /**
@@ -74,21 +78,14 @@
     window.util.isEscEvent(evt, closePopup);
   };
   /**
-   * подвешивание обработчиков событий на кнопку закрытия попапа (крестик)
-   */
-  galleryClose.addEventListener('click', onGalleryCloseClick);
-  galleryClose.addEventListener('keydown', onGalleryCloseEnterPress);
-
-  /**
-   * Функция подвешивания обработчиков событий на каждый элемент из списка с помощью цикла
+   * Интерфейс получения данных загруженных на сайт картинок и регистрация на них обработчиков клика и нажатия ENTER
+   * @type {{getElementData: Window.popup.getElementData}}
    */
   window.popup = {
     getElementData: function (nodeList) {
-      pictureList = nodeList;
-      for (var i = 0; i < pictureList.length; i++) {
-
-        pictureList[i].addEventListener('click', onPictureClick);
-        pictureList[i].addEventListener('keydown', onPictureEnterPress);
+      for (var i = 0; i < nodeList.length; i++) {
+        nodeList[i].addEventListener('click', onPictureClick);
+        nodeList[i].addEventListener('keydown', onPictureEnterPress);
       }
     }
   };

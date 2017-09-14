@@ -15,7 +15,8 @@
 
   var scaleElement = framingForm.querySelector('.upload-resize-controls');
   var pictureSizeField = framingForm.querySelector('.upload-resize-controls-value');
-  var imagePreview = framingForm.querySelector('.effect-image-preview');
+  var uploadFormPreview = framingForm.querySelector('.upload-form-preview');
+  var imagePreview = uploadFormPreview.querySelector('.effect-image-preview');
   var effectControls = framingForm.querySelector('.upload-effect-controls');
   var effectLevelControls = framingForm.querySelector('.upload-effect-level');
   var effectLevelLine = effectLevelControls.querySelector('.upload-effect-level-line');
@@ -36,9 +37,11 @@
     uploadSubmit.addEventListener('click', onUploadSubmitClick);
     uploadSubmit.addEventListener('keydown', onUploadSubmitEnterPress);
     effectControls.addEventListener('click', onEffectControlsClick);
+    effectLevelControls.classList.remove('hidden');
     window.initializeFilters.setCoords(effectLevelLine.getBoundingClientRect().width, 'max');
     effectLevelControls.classList.add('hidden');
     scaleElement.addEventListener('click', onPictureSizeButtonClick);
+    imagePreview.addEventListener('mousedown', onImagePreviewMove);
   };
   /**
    * Функция закрытия формы кадрирования. При закрытии попапа показывает форму загрузки изображения, а также
@@ -48,65 +51,54 @@
     framingForm.classList.add('hidden');
     uploadForm.classList.remove('hidden');
     document.removeEventListener('keydown', onDocumentEscPress);
+    uploadFormReset();
+  };
+  /**
+   * Функция сброса формы
+   */
+  var uploadFormReset = function () {
+    var filterNone = document.querySelector('#upload-effect-none');
+    window.initializeFilters.initializeFilters(filterNone, effectFilterOn);
+    window.initializeScale.initializeScale(null, 100, pictureSizeChange);
+    form.reset();
   };
 
     /**
    * Функция отправки формы кадрирования загружаемого изображения. Перед отправкой проверяет правильность заполнения
-   * полей хеш-тегов и комментариев. Поле комментариев является обязательным, минимальное количество символов - 20,
-   * максимальное - 100. Поле хеш-тегов необязательное, может содержать максмимум пять хеш-тегов, разделенных между
+   * поля хеш-тегов. Поле хеш-тегов необязательное, может содержать максмимум пять хеш-тегов, разделенных между
    * собой пробелом. Каждый хеш-тег начинается с #, уникален и не превышает 20 символов.
    * @param {Object} evt
    */
   var uploadFormSubmit = function (evt) {
-    evt.preventDefault();
+    window.util.preventDefaultAction(evt);
     hashTagForm.style.borderColor = null;
     hashTagForm.style.borderWidth = null;
-    commentForm.style.borderColor = null;
-    commentForm.style.borderWidth = null;
 
     var errorHighlight = function (node) {
       node.style.borderColor = 'red';
       node.style.borderWidth = '2px';
     };
 
-    var hashtagValue = hashTagForm.value;
-    var hashtagValues = hashtagValue.split([' ']);
-    var maxHashtagLength = 20;
-    var maxHashtagCount = 5;
-    var mismatchCount = 0;
+    if (!hashTagForm.value) {
+      window.backend.save(new FormData(form), framingFormClose, window.util.renderError);
+    } else {
+      var hashtagValue = hashTagForm.value;
+      var hashtagValues = hashtagValue.split([' ']);
+      var MAX_HASHTAG_COUNT = 5;
+      var mismatchCount = 0;
 
-    if (hashtagValues.length > maxHashtagCount) {
-      mismatchCount++;
-    }
+      for (var i = 0; i < hashtagValues.length; i++) {
+        if (hashtagValues.includes(hashtagValues[i], i + 1) || hashtagValues[i].search(/^[#][\w]{1,19}$/) === -1) {
+          mismatchCount++;
+        }
+      }
 
-    for (var i = 0; i < hashtagValues.length; i++) {
-      if (hashtagValues.includes(hashtagValues[i], i + 1)) {
-        mismatchCount++;
-      }
-      if (hashtagValues[i].length > maxHashtagLength) {
-        mismatchCount++;
-      }
-      if (hashtagValue.length > 0 && hashtagValues[i].split('')[0] !== '#') {
-        mismatchCount++;
-      }
-    }
-
-    if (!commentForm.validity.valid) {
-      errorHighlight(commentForm);
-      if (mismatchCount > 0) {
+      if (mismatchCount === 0 && hashtagValues.length <= MAX_HASHTAG_COUNT) {
+        window.backend.save(new FormData(form), framingFormClose, window.util.renderError);
+      } else {
         errorHighlight(hashTagForm);
       }
-    } else if (mismatchCount > 0) {
-      errorHighlight(hashTagForm);
-    } else {
-      window.backend.save(new FormData(form), onSaveSuccess, window.util.renderError);
     }
-  };
-
-  var onSaveSuccess = function () {
-    framingForm.classList.add('hidden');
-    uploadForm.classList.remove('hidden');
-    form.reset();
   };
 
   /**
@@ -143,9 +135,44 @@
     pictureSizeField.value = scale + '%';
     imagePreview.style.transform = 'scale(' + (scale / 100) + ')';
   };
+
+  /**
+   * Функция - обработки данных (путь) загружаемого изображения
+   * @param {Array} files
+   */
+  var handleFiles = function (files) {
+    imagePreview.file = files[0];
+
+    var reader = new FileReader();
+    reader.onload = (function (img) {
+      return function (evt) {
+        img.src = evt.target.result;
+      };
+    })(imagePreview);
+    reader.readAsDataURL(files[0]);
+
+    framingFormOpen();
+  };
+  /**
+   * Функция обработки извлечения данных загружаемого изображения
+   * @param {Event} evt
+   */
+  var upload = function (evt) {
+    window.util.preventDefaultAction(evt);
+    var files;
+
+    if (evt.dataTransfer) {
+      var dt = evt.dataTransfer;
+      files = dt.files;
+    } else {
+      files = evt.target.files;
+    }
+    handleFiles(files);
+  };
+
   /**
    * Функция обработчика события нажатия ESC
-   * @param {Object} evt
+   * @param {Event} evt
    */
   var onDocumentEscPress = function (evt) {
     if (commentForm !== document.activeElement) {
@@ -160,34 +187,28 @@
   };
   /**
    * Функция обработчика события нажатия ENTER на кнопке формы reset
-   * @param {Object} evt
+   * @param {Event} evt
    */
   var onUploadCancelEnterPress = function (evt) {
     window.util.isEnterEvent(evt, framingFormClose);
   };
   /**
    * Функция обработчика события клика на кнопке формы submit
-   * @param {Object} evt
+   * @param {Event} evt
    */
   var onUploadSubmitClick = function (evt) {
     uploadFormSubmit(evt);
   };
   /**
    * Функция обработчика события нажатия ENTER на кнопке формы submit
-   * @param {Object} evt
+   * @param {Event} evt
    */
   var onUploadSubmitEnterPress = function (evt) {
     window.util.isEnterEvent(evt, uploadFormSubmit);
   };
-  /**
-   * Функция обработчика события изменения значения поля input (загрузка файла)
-   */
-  var onUploadInputChange = function () {
-    framingFormOpen();
-  };
-  /**
+   /**
    * Функция - обработчик события клика на кнопки изменения масштаба загружаемого изображения
-   * @param {Object} evt
+   * @param {Event} evt
    */
   var onPictureSizeButtonClick = function (evt) {
     var value = +pictureSizeField.value.substring(0, pictureSizeField.value.length - 1);
@@ -200,7 +221,7 @@
     window.initializeScale.initializeScale(scaleElementValue, value, pictureSizeChange);
   };
    /** Функция - обработчик события (клик) на чекбоксе графического фильтра через делегирование
-   * @param {Object} evt
+   * @param {Event} evt
    */
   var onEffectControlsClick = function (evt) {
     var target = evt.target;
@@ -212,8 +233,8 @@
     }
   };
   /**
-   * Функция - обработчик события клика на пин изменения интенсивности применяемого графического фильтра
-   * @param {Object} evt
+   * Функция - обработчик перетаскивания пина изменения интенсивности применяемого графического фильтра
+   * @param {Event} evt
    */
   var onEffectPinMove = function (evt) {
     evt.preventDefault();
@@ -233,7 +254,56 @@
     document.addEventListener('mouseup', onMouseUp);
   };
   /**
-   * Регистрация обрабочика события на поле input (загрузка файла)
+   * Функция - обработчик перетаскивания изображения
+   * @param {Event} evt
    */
+  var onImagePreviewMove = function (evt) {
+    evt.preventDefault();
+    var startCoords = {
+      x: evt.clientX,
+      y: evt.clientY
+    };
+    uploadFormPreview.style.position = 'relative';
+
+    var onMouseMove = function (moveEvt) {
+      moveEvt.preventDefault();
+
+      var shift = {
+        x: startCoords.x - moveEvt.clientX,
+        y: startCoords.y - moveEvt.clientY
+      };
+
+      startCoords = {
+        x: moveEvt.clientX,
+        y: moveEvt.clientY
+      };
+      uploadFormPreview.style.top = (uploadFormPreview.offsetTop - shift.y) + 'px';
+      uploadFormPreview.style.left = (uploadFormPreview.offsetLeft - shift.x) + 'px';
+    };
+
+    var onMouseUp = function (upEvt) {
+      upEvt.preventDefault();
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  };
+
+  var onUploadControlDrop = function (evt) {
+    upload(evt);
+  };
+
+  var onUploadInputChange = function (evt) {
+    upload(evt);
+  };
+
+  /**
+   * Регистрация обрабочика события на input и label загрузки файла
+   */
+  uploadForm.querySelector('.upload-control').addEventListener('dragenter', window.util.preventDefaultAction);
+  uploadForm.querySelector('.upload-control').addEventListener('dragover', window.util.preventDefaultAction);
+  uploadForm.querySelector('.upload-control').addEventListener('drop', onUploadControlDrop);
   uploadInput.addEventListener('change', onUploadInputChange);
 })();

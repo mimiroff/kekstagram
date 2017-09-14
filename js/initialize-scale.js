@@ -15,14 +15,14 @@
      */
     initializeScale: function (scaleElementValue, value, adjustScale) {
       var scale = value;
-      var maxScale = 100;
-      var minScale = 25;
-      var step = 25;
+      var MAX_SCALE = 100;
+      var MIN_SCALE = 25;
+      var STEP = 25;
 
-      if (scaleElementValue === 'inc' && scale < maxScale) {
-        scale = scale + step;
-      } else if (scaleElementValue === 'dec' && scale > minScale) {
-        scale = scale - step;
+      if (scaleElementValue === 'inc' && scale < MAX_SCALE) {
+        scale = scale + STEP;
+      } else if (scaleElementValue === 'dec' && scale > MIN_SCALE) {
+        scale = scale - STEP;
       }
       if (typeof adjustScale === 'function') {
         adjustScale(scale);

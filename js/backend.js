@@ -6,7 +6,7 @@
       var xhr = new XMLHttpRequest();
       xhr.responseType = 'json';
       xhr.addEventListener('load', function () {
-        if (xhr.status === 200) {
+        if (xhr.status === 200 || xhr.status === 304) {
           onLoad(xhr.response);
         } else {
           onError('Ошибка загрузки страницы');

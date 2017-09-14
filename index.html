@@ -95,11 +95,9 @@
         </label>
       </fieldset>
 
-      <input class="upload-form-hashtags" name="hashtags" placeholder="#хэш-тег"
-             title="#хеш-теги должны начинаться с #, ограничены длиной в 20 символов, должны быть уникальными и не более пяти">
+      <input class="upload-form-hashtags" name="hashtags" placeholder="#хэш-тег">
 
-      <textarea class="upload-form-description" name="description" placeholder="Ваш комментарий..." minlength="30" maxlength="100"
-                title="Комментарий обязателен. Минимальное количество символов - 30, максимальное - 100" required></textarea>
+      <textarea class="upload-form-description" name="description" placeholder="Ваш комментарий..." maxlength="140"></textarea>
 
       <button class="upload-form-cancel" type="reset" id="upload-cancel"></button>
       <button class="upload-form-submit" type="submit" id="upload-submit">Отправить</button>
@@ -160,9 +158,9 @@
 <script src="./js/util.js"></script>
 <script src="./js/initialize-scale.js"></script>
 <script src="./js/initialize-filters.js"></script>
+<script src="./js/upload.js"></script>
+<script src="./js/popup.js"></script>
 <script src="./js/backend.js"></script>
 <script src="./js/pictures.js"></script>
-<script src="./js/popup.js"></script>
-<script src="./js/upload.js"></script>
 </body>
 </html>
