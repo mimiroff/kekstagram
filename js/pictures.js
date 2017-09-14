@@ -46,11 +46,12 @@
   var showFilter = function (data) {
     var filtersForm = document.querySelector('.filters');
     filtersForm.classList.remove('hidden');
-    filtersForm.querySelectorAll('.filters-radio').forEach(function (element) {
-      element.addEventListener('click', function (evt) {
+    var filterButtons = filtersForm.querySelectorAll('.filters-radio');
+    for (var i = 0; i < filterButtons.length; i++) {
+      filterButtons[i].addEventListener('click', function (evt) {
         sortPhotos(evt, data);
       });
-    });
+    }
     showPhotoElements(data);
   };
   /**

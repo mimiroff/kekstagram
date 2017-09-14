@@ -78,22 +78,15 @@
     window.util.isEscEvent(evt, closePopup);
   };
   /**
-   * Функция регистрации обработчиков событий на каждую картинку
-   * @param {NodeList} nodeList
-   */
-  var registerEventListeners = function (nodeList) {
-    nodeList.forEach(function (it) {
-      it.addEventListener('click', onPictureClick);
-      it.addEventListener('keydown', onPictureEnterPress);
-    });
-  };
-  /**
-   * Интерфейс получения данных загуженных на сайт картинок
+   * Интерфейс получения данных загруженных на сайт картинок и регистрация на них обработчиков клика и нажатия ENTER
    * @type {{getElementData: Window.popup.getElementData}}
    */
   window.popup = {
     getElementData: function (nodeList) {
-      registerEventListeners(nodeList);
+      for (var i = 0; i < nodeList.length; i++) {
+        nodeList[i].addEventListener('click', onPictureClick);
+        nodeList[i].addEventListener('keydown', onPictureEnterPress);
+      }
     }
   };
 })();
