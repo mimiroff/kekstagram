@@ -74,16 +74,22 @@
   var showPhotoElements = function (photos) {
     var fragment = document.createDocumentFragment();
     var pictures = document.querySelector('.pictures');
+    var replaceContainer = pictures.querySelector('div');
+    var container = document.createElement('DIV');
+
+    fragment.appendChild(container);
 
     [].slice.call(photos).forEach(function (it) {
-      fragment.appendChild(generateElements(it));
+      container.appendChild(generateElements(it));
     });
-    while (pictures.firstChild) {
-      pictures.removeChild(pictures.firstChild);
-    }
-    pictures.appendChild(fragment);
 
-    window.popup.getElementData(pictures.querySelectorAll('.picture'));
+    if (replaceContainer) {
+      pictures.replaceChild(fragment, replaceContainer);
+    } else {
+      pictures.appendChild(fragment);
+    }
+
+    window.popup.getElementData(pictures);
   };
   window.backend.load(showFilter, window.util.renderError);
 })();

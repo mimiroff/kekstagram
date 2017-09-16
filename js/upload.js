@@ -7,6 +7,7 @@
   var form = document.querySelector('#upload-select-image');
   var uploadForm = form.querySelector('.upload-image');
   var uploadInput = uploadForm.querySelector('#upload-file');
+  var uploadControl = uploadForm.querySelector('.upload-control');
   var framingForm = form.querySelector('.upload-overlay');
   var uploadCancel = framingForm.querySelector('.upload-form-cancel');
   var uploadSubmit = framingForm.querySelector('.upload-form-submit');
@@ -23,43 +24,62 @@
   var effectPin = effectLevelLine.querySelector('.upload-effect-level-pin');
   var effectLevel = effectLevelLine.querySelector('.upload-effect-level-val');
 
-  /**
+  var SCALE_RATIO = 100;
+  var pinWidth;
+
+    /**
    * Функция открытия формы кадрирования загружаемого изображения. При открытии попапа закрывает форму загрузки
    * изображения, регистрирует обработчики событий на кнопке закрытия (клик и ENTER),
    * документе (ESC) и кнопке отправки формы клик и ENTER)
    */
-  var framingFormOpen = function () {
+  var openFramingForm = function () {
     framingForm.classList.remove('hidden');
+    uploadControl.removeEventListener('dragenter', window.util.preventDefaultAction);
+    uploadControl.removeEventListener('dragover', window.util.preventDefaultAction);
+    uploadControl.removeEventListener('drop', uploadControlDropHandler);
+    uploadInput.removeEventListener('change', uploadInputChangeHandler);
     uploadForm.classList.add('hidden');
-    document.addEventListener('keydown', onDocumentEscPress);
-    uploadCancel.addEventListener('click', onUploadCancelClick);
-    uploadCancel.addEventListener('keydown', onUploadCancelEnterPress);
-    uploadSubmit.addEventListener('click', onUploadSubmitClick);
-    uploadSubmit.addEventListener('keydown', onUploadSubmitEnterPress);
-    effectControls.addEventListener('click', onEffectControlsClick);
+    document.addEventListener('keydown', documentEscPressHandler);
+    uploadCancel.addEventListener('click', uploadCancelClickHandler);
+    uploadCancel.addEventListener('keydown', uploadCancelEnterPressHandler);
+    uploadSubmit.addEventListener('click', uploadSubmitClickHandler);
+    uploadSubmit.addEventListener('keydown', uploadSubmitEnterPressHandler);
+    effectControls.addEventListener('click', effectControlsClickHandler);
     effectLevelControls.classList.remove('hidden');
     window.initializeFilters.setCoords(effectLevelLine.getBoundingClientRect().width, 'max');
+    pinWidth = effectPin.getBoundingClientRect().width;
     effectLevelControls.classList.add('hidden');
-    scaleElement.addEventListener('click', onPictureSizeButtonClick);
-    imagePreview.addEventListener('mousedown', onImagePreviewMove);
+    scaleElement.addEventListener('click', scaleElementClickHandler);
+    imagePreview.addEventListener('mousedown', imagePreviewMouseDownHandler);
   };
   /**
    * Функция закрытия формы кадрирования. При закрытии попапа показывает форму загрузки изображения, а также
    * снимает обработчик событий с документа (ESC)
    */
-  var framingFormClose = function () {
+  var closeFramingForm = function () {
     framingForm.classList.add('hidden');
     uploadForm.classList.remove('hidden');
-    document.removeEventListener('keydown', onDocumentEscPress);
-    uploadFormReset();
+    document.removeEventListener('keydown', documentEscPressHandler);
+    uploadCancel.removeEventListener('click', uploadCancelClickHandler);
+    uploadCancel.removeEventListener('keydown', uploadCancelEnterPressHandler);
+    uploadSubmit.removeEventListener('click', uploadSubmitClickHandler);
+    uploadSubmit.removeEventListener('keydown', uploadSubmitEnterPressHandler);
+    effectControls.removeEventListener('click', effectControlsClickHandler);
+    scaleElement.removeEventListener('click', scaleElementClickHandler);
+    imagePreview.removeEventListener('mousedown', imagePreviewMouseDownHandler);
+    uploadControl.addEventListener('dragenter', window.util.preventDefaultAction);
+    uploadControl.addEventListener('dragover', window.util.preventDefaultAction);
+    uploadControl.addEventListener('drop', uploadControlDropHandler);
+    uploadInput.addEventListener('change', uploadInputChangeHandler);
+    resetUploadForm();
   };
   /**
    * Функция сброса формы
    */
-  var uploadFormReset = function () {
+  var resetUploadForm = function () {
     var filterNone = document.querySelector('#upload-effect-none');
-    window.initializeFilters.initializeFilters(filterNone, effectFilterOn);
-    window.initializeScale.initializeScale(null, 100, pictureSizeChange);
+    window.initializeFilters.initializeFilters(filterNone, activateEffectFilter);
+    window.initializeScale.initializeScale(null, 100, changePictureSize);
     form.reset();
   };
 
@@ -69,18 +89,18 @@
    * собой пробелом. Каждый хеш-тег начинается с #, уникален и не превышает 20 символов.
    * @param {Object} evt
    */
-  var uploadFormSubmit = function (evt) {
+  var submitUploadForm = function (evt) {
     window.util.preventDefaultAction(evt);
     hashTagForm.style.borderColor = null;
     hashTagForm.style.borderWidth = null;
 
-    var errorHighlight = function (node) {
+    var highlightError = function (node) {
       node.style.borderColor = 'red';
       node.style.borderWidth = '2px';
     };
 
     if (!hashTagForm.value) {
-      window.backend.save(new FormData(form), framingFormClose, window.util.renderError);
+      window.backend.save(new FormData(form), closeFramingForm, window.util.renderError);
     } else {
       var hashtagValue = hashTagForm.value;
       var hashtagValues = hashtagValue.split([' ']);
@@ -94,9 +114,9 @@
       }
 
       if (mismatchCount === 0 && hashtagValues.length <= MAX_HASHTAG_COUNT) {
-        window.backend.save(new FormData(form), framingFormClose, window.util.renderError);
+        window.backend.save(new FormData(form), closeFramingForm, window.util.renderError);
       } else {
-        errorHighlight(hashTagForm);
+        highlightError(hashTagForm);
       }
     }
   };
@@ -106,16 +126,16 @@
    * @param {String} filter
    * @param {Number} coords
    */
-  var effectFilterOn = function (filter, coords) {
+  var activateEffectFilter = function (filter, coords) {
 
     imagePreview.style.filter = filter;
 
     if (filter !== 'none') {
       setPinCoords(coords);
       effectLevelControls.classList.remove('hidden');
-      effectPin.addEventListener('mousedown', onEffectPinMove);
+      effectPin.addEventListener('mousedown', effectPinMouseDownHandler);
     } else {
-      effectPin.removeEventListener('mousedown', onEffectPinMove);
+      effectPin.removeEventListener('mousedown', effectPinMouseDownHandler);
       effectLevelControls.classList.add('hidden');
     }
   };
@@ -124,16 +144,17 @@
    * @param {Number} coords
    */
   var setPinCoords = function (coords) {
+    var pinHalfWidth = pinWidth / 2;
     effectPin.style.left = coords + 'px';
-    effectLevel.style.width = (coords - 9) + 'px';
+    effectLevel.style.width = (coords - pinHalfWidth) + 'px';
   };
   /**
    * Функция изменения масштаба загружаемого изображения
    * @param {Number} scale
    */
-  var pictureSizeChange = function (scale) {
+  var changePictureSize = function (scale) {
     pictureSizeField.value = scale + '%';
-    imagePreview.style.transform = 'scale(' + (scale / 100) + ')';
+    imagePreview.style.transform = 'scale(' + (scale / SCALE_RATIO) + ')';
   };
 
   /**
@@ -151,7 +172,7 @@
     })(imagePreview);
     reader.readAsDataURL(files[0]);
 
-    framingFormOpen();
+    openFramingForm();
   };
   /**
    * Функция обработки извлечения данных загружаемого изображения
@@ -174,60 +195,61 @@
    * Функция обработчика события нажатия ESC
    * @param {Event} evt
    */
-  var onDocumentEscPress = function (evt) {
+  var documentEscPressHandler = function (evt) {
     if (commentForm !== document.activeElement) {
-      window.util.isEscEvent(evt, framingFormClose);
+      window.util.isEscEvent(evt, closeFramingForm);
     }
   };
   /**
    * Функция обработчика события клика на кнопке формы reset
    */
-  var onUploadCancelClick = function () {
-    framingFormClose();
+  var uploadCancelClickHandler = function () {
+    closeFramingForm();
   };
   /**
    * Функция обработчика события нажатия ENTER на кнопке формы reset
    * @param {Event} evt
    */
-  var onUploadCancelEnterPress = function (evt) {
-    window.util.isEnterEvent(evt, framingFormClose);
+  var uploadCancelEnterPressHandler = function (evt) {
+    window.util.isEnterEvent(evt, closeFramingForm());
   };
   /**
    * Функция обработчика события клика на кнопке формы submit
    * @param {Event} evt
    */
-  var onUploadSubmitClick = function (evt) {
-    uploadFormSubmit(evt);
+  var uploadSubmitClickHandler = function (evt) {
+    submitUploadForm(evt);
   };
   /**
    * Функция обработчика события нажатия ENTER на кнопке формы submit
    * @param {Event} evt
    */
-  var onUploadSubmitEnterPress = function (evt) {
-    window.util.isEnterEvent(evt, uploadFormSubmit);
+  var uploadSubmitEnterPressHandler = function (evt) {
+    window.util.isEnterEvent(evt, submitUploadForm);
   };
    /**
    * Функция - обработчик события клика на кнопки изменения масштаба загружаемого изображения
    * @param {Event} evt
    */
-  var onPictureSizeButtonClick = function (evt) {
+  var scaleElementClickHandler = function (evt) {
     var value = +pictureSizeField.value.substring(0, pictureSizeField.value.length - 1);
     var scaleElementValue = null;
-    if (evt.target.className.includes('upload-resize-controls-button-inc')) {
+
+    if ([].slice.call(evt.target.classList).indexOf('upload-resize-controls-button-inc') !== -1) {
       scaleElementValue = 'inc';
-    } else if (evt.target.className.includes('upload-resize-controls-button-dec')) {
+    } else if ([].slice.call(evt.target.classList).indexOf('upload-resize-controls-button-dec') !== -1) {
       scaleElementValue = 'dec';
     }
-    window.initializeScale.initializeScale(scaleElementValue, value, pictureSizeChange);
+    window.initializeScale.initializeScale(scaleElementValue, value, changePictureSize);
   };
    /** Функция - обработчик события (клик) на чекбоксе графического фильтра через делегирование
    * @param {Event} evt
    */
-  var onEffectControlsClick = function (evt) {
+  var effectControlsClickHandler = function (evt) {
     var target = evt.target;
     while (target !== effectControls) {
       if (target.tagName === 'INPUT') {
-        window.initializeFilters.initializeFilters(target, effectFilterOn);
+        window.initializeFilters.initializeFilters(target, activateEffectFilter);
       }
       target = target.parentNode;
     }
@@ -236,28 +258,28 @@
    * Функция - обработчик перетаскивания пина изменения интенсивности применяемого графического фильтра
    * @param {Event} evt
    */
-  var onEffectPinMove = function (evt) {
+  var effectPinMouseDownHandler = function (evt) {
     evt.preventDefault();
     window.initializeFilters.setCoords(evt.clientX, 'start');
 
-    var onMouseMove = function (moveEvt) {
-      window.initializeFilters.filtersPinMove(moveEvt, effectPin, effectFilterOn);
+    var framingFormMouseMoveHandler = function (moveEvt) {
+      window.initializeFilters.moveFiltersPin(moveEvt, effectPin, activateEffectFilter);
     };
 
-    var onMouseUp = function (upEvt) {
+    var documentMouseUpHandler = function (upEvt) {
       upEvt.preventDefault();
-      framingForm.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
+      framingForm.removeEventListener('mousemove', framingFormMouseMoveHandler);
+      document.removeEventListener('mouseup', documentMouseUpHandler);
     };
 
-    framingForm.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
+    framingForm.addEventListener('mousemove', framingFormMouseMoveHandler);
+    document.addEventListener('mouseup', documentMouseUpHandler);
   };
   /**
    * Функция - обработчик перетаскивания изображения
    * @param {Event} evt
    */
-  var onImagePreviewMove = function (evt) {
+  var imagePreviewMouseDownHandler = function (evt) {
     evt.preventDefault();
     var startCoords = {
       x: evt.clientX,
@@ -265,7 +287,7 @@
     };
     uploadFormPreview.style.position = 'relative';
 
-    var onMouseMove = function (moveEvt) {
+    var documentMouseMoveHandler = function (moveEvt) {
       moveEvt.preventDefault();
 
       var shift = {
@@ -281,29 +303,29 @@
       uploadFormPreview.style.left = (uploadFormPreview.offsetLeft - shift.x) + 'px';
     };
 
-    var onMouseUp = function (upEvt) {
+    var documentMouseUpHandler = function (upEvt) {
       upEvt.preventDefault();
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
+      document.removeEventListener('mousemove', documentMouseMoveHandler);
+      document.removeEventListener('mouseup', documentMouseUpHandler);
     };
 
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener('mousemove', documentMouseMoveHandler);
+    document.addEventListener('mouseup', documentMouseUpHandler);
   };
 
-  var onUploadControlDrop = function (evt) {
+  var uploadControlDropHandler = function (evt) {
     upload(evt);
   };
 
-  var onUploadInputChange = function (evt) {
+  var uploadInputChangeHandler = function (evt) {
     upload(evt);
   };
 
   /**
    * Регистрация обрабочика события на input и label загрузки файла
    */
-  uploadForm.querySelector('.upload-control').addEventListener('dragenter', window.util.preventDefaultAction);
-  uploadForm.querySelector('.upload-control').addEventListener('dragover', window.util.preventDefaultAction);
-  uploadForm.querySelector('.upload-control').addEventListener('drop', onUploadControlDrop);
-  uploadInput.addEventListener('change', onUploadInputChange);
+  uploadControl.addEventListener('dragenter', window.util.preventDefaultAction);
+  uploadControl.addEventListener('dragover', window.util.preventDefaultAction);
+  uploadControl.addEventListener('drop', uploadControlDropHandler);
+  uploadInput.addEventListener('change', uploadInputChangeHandler);
 })();

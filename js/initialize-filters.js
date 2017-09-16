@@ -11,6 +11,9 @@
 
   var MIN_COORDS = 0;
   var DEFAULT_RATIO = 0.2;
+  var INVERT_FILTER_RATIO = 100;
+  var BLUR_FILTER_RATIO = 3;
+  var BRIGHTNESS_FILTER_RATIO = 3;
   var maxCoords;
   var dftCoords;
   var startCoords;
@@ -55,13 +58,13 @@
           filter = 'sepia(' + (pinCoords / maxCoords) + ')';
           break;
         case 'marvin':
-          filter = 'invert(' + (pinCoords / (maxCoords / 100)) + '%)';
+          filter = 'invert(' + (pinCoords / (maxCoords / INVERT_FILTER_RATIO)) + '%)';
           break;
         case 'phobos':
-          filter = 'blur(' + (pinCoords / (maxCoords / 3)) + 'px)';
+          filter = 'blur(' + (pinCoords / (maxCoords / BLUR_FILTER_RATIO)) + 'px)';
           break;
         case 'heat':
-          filter = 'brightness(' + (pinCoords / (maxCoords / 3)) + ')';
+          filter = 'brightness(' + (pinCoords / (maxCoords / BRIGHTNESS_FILTER_RATIO)) + ')';
           break;
         default:
           filter = 'none';
@@ -75,7 +78,7 @@
      * @param {Node} pinElement
      * @param {Function} callback
      */
-    filtersPinMove: function (moveEvt, pinElement, callback) {
+    moveFiltersPin: function (moveEvt, pinElement, callback) {
       moveEvt.preventDefault();
       var shift = startCoords - moveEvt.clientX;
       startCoords = moveEvt.clientX;

@@ -24,9 +24,7 @@
       } else if (scaleElementValue === 'dec' && scale > MIN_SCALE) {
         scale = scale - STEP;
       }
-      if (typeof adjustScale === 'function') {
-        adjustScale(scale);
-      }
+      adjustScale(scale);
     }
   };
 })();

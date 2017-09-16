@@ -12,6 +12,9 @@
           onError('Ошибка загрузки страницы');
         }
       });
+      xhr.addEventListener('error', function () {
+        onError('Ошибка соединения');
+      });
       xhr.open('GET', URL);
       xhr.send();
     },
@@ -25,6 +28,9 @@
         } else {
           onError('Ошибка отправки формы');
         }
+      });
+      xhr.addEventListener('error', function () {
+        onError('Ошибка соединения');
       });
       xhr.open('POST', URL);
       xhr.send(data);

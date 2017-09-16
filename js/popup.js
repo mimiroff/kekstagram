@@ -7,15 +7,16 @@
 (function () {
   var gallery = document.querySelector('.gallery-overlay');
   var galleryClose = gallery.querySelector('.gallery-overlay-close');
+  var pictures;
 
   /**
    * Функция закрытия попапа
    */
   var closePopup = function () {
     gallery.classList.add('hidden');
-    document.removeEventListener('keydown', onDocumentEscPress);
-    galleryClose.removeEventListener('click', onGalleryCloseClick);
-    galleryClose.removeEventListener('keydown', onGalleryCloseEnterPress);
+    document.removeEventListener('keydown', documentEscPressHandler);
+    galleryClose.removeEventListener('click', galleryCloseClickHandler);
+    galleryClose.removeEventListener('keydown', galleryCloseEnterPressHandler);
   };
   /**
    * Функция открытия попапа
@@ -23,9 +24,9 @@
    */
   var openPopup = function (evt) {
     gallery.classList.remove('hidden');
-    document.addEventListener('keydown', onDocumentEscPress);
-    galleryClose.addEventListener('click', onGalleryCloseClick);
-    galleryClose.addEventListener('keydown', onGalleryCloseEnterPress);
+    document.addEventListener('keydown', documentEscPressHandler);
+    galleryClose.addEventListener('click', galleryCloseClickHandler);
+    galleryClose.addEventListener('keydown', galleryCloseEnterPressHandler);
     renderPopup(evt);
   };
   /**
@@ -33,20 +34,26 @@
    * @param {Object} evt
    */
   var renderPopup = function (evt) {
-    var image = evt.currentTarget.querySelector('img').src;
-    var likes = evt.currentTarget.querySelector('.picture-likes').textContent;
-    var comments = evt.currentTarget.querySelector('.picture-comments').textContent;
+    var target = evt.target;
+    while (target !== pictures) {
+      if (target.tagName === 'A') {
+        var image = target.querySelector('img').src;
+        var likes = target.querySelector('.picture-likes').textContent;
+        var comments = target.querySelector('.picture-comments').textContent;
 
-    gallery.querySelector('.gallery-overlay-image').src = image;
-    gallery.querySelector('.likes-count').textContent = likes;
-    gallery.querySelector('.comments-count').textContent = comments;
+        gallery.querySelector('.gallery-overlay-image').src = image;
+        gallery.querySelector('.likes-count').textContent = likes;
+        gallery.querySelector('.comments-count').textContent = comments;
+      }
+      target = target.parentNode;
+    }
   };
   /**
    * Функция-обрабочик события клик на элементе - картинка
    * @param {Object} evt
    */
   var onPictureClick = function (evt) {
-    window.util.preventDefaultAction(evt);
+    evt.preventDefault();
     openPopup(evt);
   };
   /**
@@ -55,38 +62,38 @@
    */
   var onPictureEnterPress = function (evt) {
     window.util.isEnterEvent(evt, openPopup);
-    document.addEventListener('keydown', onDocumentEscPress);
   };
   /**
    * Функция-обрабочик события клик на кнопке закрытия попапа (крестик)
    */
-  var onGalleryCloseClick = function () {
+  var galleryCloseClickHandler = function () {
     closePopup();
   };
   /**
    * Функция-обрабочик события нажатия клавиши ENTER на кнопке закрытия попапа (крестик)
    * @param {Object} evt
    */
-  var onGalleryCloseEnterPress = function (evt) {
+  var galleryCloseEnterPressHandler = function (evt) {
     window.util.isEnterEvent(evt, closePopup);
   };
   /**
    * Функция-обрабочик события нажатия клавиши ESC
    * @param {Object} evt
    */
-  var onDocumentEscPress = function (evt) {
+  var documentEscPressHandler = function (evt) {
     window.util.isEscEvent(evt, closePopup);
   };
   /**
    * Интерфейс получения данных загруженных на сайт картинок и регистрация на них обработчиков клика и нажатия ENTER
    * @type {{getElementData: Window.popup.getElementData}}
    */
+
   window.popup = {
-    getElementData: function (nodeList) {
-      for (var i = 0; i < nodeList.length; i++) {
-        nodeList[i].addEventListener('click', onPictureClick);
-        nodeList[i].addEventListener('keydown', onPictureEnterPress);
-      }
+    getElementData: function (node) {
+
+      pictures = node;
+      pictures.addEventListener('click', onPictureClick);
+      pictures.addEventListener('click', onPictureEnterPress);
     }
   };
 })();
