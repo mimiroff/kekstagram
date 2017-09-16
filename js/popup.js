@@ -52,7 +52,7 @@
    * Функция-обрабочик события клик на элементе - картинка
    * @param {Object} evt
    */
-  var onPictureClick = function (evt) {
+  var picturesClickHandler = function (evt) {
     evt.preventDefault();
     openPopup(evt);
   };
@@ -60,7 +60,7 @@
    * Функция-обрабочик события нажатия клавиши ENTER на элементе - картинка
    * @param {Object} evt
    */
-  var onPictureEnterPress = function (evt) {
+  var picturesEnterPressHandler = function (evt) {
     window.util.isEnterEvent(evt, openPopup);
   };
   /**
@@ -92,8 +92,8 @@
     getElementData: function (node) {
 
       pictures = node;
-      pictures.addEventListener('click', onPictureClick);
-      pictures.addEventListener('click', onPictureEnterPress);
+      pictures.addEventListener('click', picturesClickHandler);
+      pictures.addEventListener('keydown', picturesEnterPressHandler);
     }
   };
 })();
