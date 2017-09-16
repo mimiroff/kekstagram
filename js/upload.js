@@ -211,7 +211,7 @@
    * @param {Event} evt
    */
   var uploadCancelEnterPressHandler = function (evt) {
-    window.util.isEnterEvent(evt, closeFramingForm());
+    window.util.isEnterEvent(evt, closeFramingForm);
   };
   /**
    * Функция обработчика события клика на кнопке формы submit

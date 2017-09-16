@@ -27,7 +27,7 @@
     },
     isEnterEvent: function (evt, action) {
       if (evt.keyCode === keyCodes.ENTER) {
-        action();
+        action(evt);
       }
     },
     renderError: function (error) {
