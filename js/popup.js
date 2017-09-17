@@ -14,9 +14,9 @@
    */
   var closePopup = function () {
     gallery.classList.add('hidden');
-    document.removeEventListener('keydown', documentEscPressHandler);
+    document.removeEventListener('keydown', documentKeydownHandler);
     galleryClose.removeEventListener('click', galleryCloseClickHandler);
-    galleryClose.removeEventListener('keydown', galleryCloseEnterPressHandler);
+    galleryClose.removeEventListener('keydown', galleryCloseKeydownHandler);
   };
   /**
    * Функция открытия попапа
@@ -24,9 +24,9 @@
    */
   var openPopup = function (evt) {
     gallery.classList.remove('hidden');
-    document.addEventListener('keydown', documentEscPressHandler);
+    document.addEventListener('keydown', documentKeydownHandler);
     galleryClose.addEventListener('click', galleryCloseClickHandler);
-    galleryClose.addEventListener('keydown', galleryCloseEnterPressHandler);
+    galleryClose.addEventListener('keydown', galleryCloseKeydownHandler);
     renderPopup(evt);
   };
   /**
@@ -60,7 +60,7 @@
    * Функция-обрабочик события нажатия клавиши ENTER на элементе - картинка
    * @param {Object} evt
    */
-  var picturesEnterPressHandler = function (evt) {
+  var picturesKeydownHandler = function (evt) {
     window.util.isEnterEvent(evt, openPopup);
   };
   /**
@@ -73,14 +73,14 @@
    * Функция-обрабочик события нажатия клавиши ENTER на кнопке закрытия попапа (крестик)
    * @param {Object} evt
    */
-  var galleryCloseEnterPressHandler = function (evt) {
+  var galleryCloseKeydownHandler = function (evt) {
     window.util.isEnterEvent(evt, closePopup);
   };
   /**
    * Функция-обрабочик события нажатия клавиши ESC
    * @param {Object} evt
    */
-  var documentEscPressHandler = function (evt) {
+  var documentKeydownHandler = function (evt) {
     window.util.isEscEvent(evt, closePopup);
   };
   /**
@@ -93,7 +93,7 @@
 
       pictures = node;
       pictures.addEventListener('click', picturesClickHandler);
-      pictures.addEventListener('keydown', picturesEnterPressHandler);
+      pictures.addEventListener('keydown', picturesKeydownHandler);
     }
   };
 })();

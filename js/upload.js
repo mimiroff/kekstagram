@@ -39,11 +39,11 @@
     uploadControl.removeEventListener('drop', uploadControlDropHandler);
     uploadInput.removeEventListener('change', uploadInputChangeHandler);
     uploadForm.classList.add('hidden');
-    document.addEventListener('keydown', documentEscPressHandler);
+    document.addEventListener('keydown', documentKeydownHandler);
     uploadCancel.addEventListener('click', uploadCancelClickHandler);
-    uploadCancel.addEventListener('keydown', uploadCancelEnterPressHandler);
+    uploadCancel.addEventListener('keydown', uploadCancelKeydownHandler);
     uploadSubmit.addEventListener('click', uploadSubmitClickHandler);
-    uploadSubmit.addEventListener('keydown', uploadSubmitEnterPressHandler);
+    uploadSubmit.addEventListener('keydown', uploadSubmitKeydownHandler);
     effectControls.addEventListener('click', effectControlsClickHandler);
     effectLevelControls.classList.remove('hidden');
     window.initializeFilters.setCoords(effectLevelLine.getBoundingClientRect().width, 'max');
@@ -59,11 +59,11 @@
   var closeFramingForm = function () {
     framingForm.classList.add('hidden');
     uploadForm.classList.remove('hidden');
-    document.removeEventListener('keydown', documentEscPressHandler);
+    document.removeEventListener('keydown', documentKeydownHandler);
     uploadCancel.removeEventListener('click', uploadCancelClickHandler);
-    uploadCancel.removeEventListener('keydown', uploadCancelEnterPressHandler);
+    uploadCancel.removeEventListener('keydown', uploadCancelKeydownHandler);
     uploadSubmit.removeEventListener('click', uploadSubmitClickHandler);
-    uploadSubmit.removeEventListener('keydown', uploadSubmitEnterPressHandler);
+    uploadSubmit.removeEventListener('keydown', uploadSubmitKeydownHandler);
     effectControls.removeEventListener('click', effectControlsClickHandler);
     scaleElement.removeEventListener('click', scaleElementClickHandler);
     imagePreview.removeEventListener('mousedown', imagePreviewMouseDownHandler);
@@ -195,7 +195,7 @@
    * Функция обработчика события нажатия ESC
    * @param {Event} evt
    */
-  var documentEscPressHandler = function (evt) {
+  var documentKeydownHandler = function (evt) {
     if (commentForm !== document.activeElement) {
       window.util.isEscEvent(evt, closeFramingForm);
     }
@@ -210,7 +210,7 @@
    * Функция обработчика события нажатия ENTER на кнопке формы reset
    * @param {Event} evt
    */
-  var uploadCancelEnterPressHandler = function (evt) {
+  var uploadCancelKeydownHandler = function (evt) {
     window.util.isEnterEvent(evt, closeFramingForm);
   };
   /**
@@ -224,7 +224,7 @@
    * Функция обработчика события нажатия ENTER на кнопке формы submit
    * @param {Event} evt
    */
-  var uploadSubmitEnterPressHandler = function (evt) {
+  var uploadSubmitKeydownHandler = function (evt) {
     window.util.isEnterEvent(evt, submitUploadForm);
   };
    /**
@@ -235,9 +235,9 @@
     var value = +pictureSizeField.value.substring(0, pictureSizeField.value.length - 1);
     var scaleElementValue = null;
 
-    if ([].slice.call(evt.target.classList).indexOf('upload-resize-controls-button-inc') !== -1) {
+    if (evt.target.classList.contains('upload-resize-controls-button-inc')) {
       scaleElementValue = 'inc';
-    } else if ([].slice.call(evt.target.classList).indexOf('upload-resize-controls-button-dec') !== -1) {
+    } else if (evt.target.classList.contains('upload-resize-controls-button-dec')) {
       scaleElementValue = 'dec';
     }
     window.initializeScale.initializeScale(scaleElementValue, value, changePictureSize);
